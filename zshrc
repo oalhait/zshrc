@@ -1,12 +1,13 @@
 # Path to your oh-my-zsh installation.
-export ZSH=/Users/oalhait/.oh-my-zsh
-export python=python3
+export ZSH=/Users/omar/.oh-my-zsh
 
 # edits for zsh vi-mode to work the way I want
 export KEYTIMEOUT=50
 bindkey -M viins 'jj' vi-cmd-mode
 
 
+# export CLICOLOR=1
+# export LSCOLORS=ExFxBxDxCxegedabagacad
 
 
 
@@ -16,8 +17,8 @@ bindkey -M viins 'jj' vi-cmd-mode
 # time that oh-my-zsh is loaded.
 ZSH_THEME="gitster"
 # Base16 Shell
-BASE16_SHELL="$HOME/.config/base16-shell/base16-default.dark.sh"
-[[ -s $BASE16_SHELL  ]] && source $BASE16_SHELL
+# BASE16_SHELL="$HOME/.config/base16-shell/base16-default.dark.sh"
+# [[ -s $BASE16_SHELL  ]] && source $BASE16_SHELL
 
 fpath=(/usr/local/share/zsh-completions $fpath)
 # Uncomment the following line to use case-sensitive completion.
@@ -48,12 +49,13 @@ ENABLE_CORRECTION="true"
 # Uncomment the following line if you want to disable marking untracked files
 # under VCS as dirty. This makes repository status check for large repositories
 # much, much faster.
-# DISABLE_UNTRACKED_FILES_DIRTY="true"
+DISABLE_UNTRACKED_FILES_DIRTY="true"
 
 # Uncomment the following line if you want to change the command execution time
 # stamp shown in the history command output.
 # The optional three formats: "mm/dd/yyyy"|"dd.mm.yyyy"|"yyyy-mm-dd"
 # HIST_STAMPS="mm/dd/yyyy"
+ZSH_DISABLE_COMPFIX="true"
 
 # Would you like to use another custom folder than $ZSH/custom?
 # ZSH_CUSTOM=/path/to/new-custom-folder
@@ -67,9 +69,11 @@ plugins=(git zsh-syntax-highlighting vi-mode)
 # User configuration
 
 export PATH="/usr/local/bin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:/opt/X11/bin:/usr/local/git/bin"
+export PATH=$PATH:~/.npm-global/bin
 # export MANPATH="/usr/local/man:$MANPATH"
 
 source $ZSH/oh-my-zsh.sh
+source /Users/omar/wifi.sh
 
 # You may need to manually set your language environment
 # export LANG=en_US.UTF-8
@@ -100,11 +104,12 @@ export TERM='xterm'
 #alias fcc="cd ~/Desktop/projects/FreeCodeCamp"
 alias untar="tar -xzvf $1; rm -rf $1"
 alias krenew="kinit oalhait@ANDREW.CMU.EDU"
-alias sml="rlwrap sml"
-
+alias conda="/Users/oalhait/miniconda3/condabin/conda"
 function addbackground() {
 	date="$(echo $(date +%m.%d.%y-%H:%M:%S))"
 	result=$(wget $1 -O "$date.jpg")
 	mv "$date.jpg" ~/Documents/desktop\ backgrounds
 }
 
+
+export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
