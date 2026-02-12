@@ -19,8 +19,10 @@ A comprehensive unified git worktree management system for working with multiple
 - `worktree new <name> [base]` - Create a new worktree from a base branch (defaults to current branch)
   - Example: `worktree new feature-x` creates from current branch
   - Example: `worktree new feat/my-feature main` creates from main branch
+  - Example: `worktree new existing-branch` creates worktree for an existing branch
   - Supports branch names with slashes (e.g., `feat/my-feature`)
   - Automatically launches Claude CLI after creation
+  - **Smart branch detection**: If the branch already exists, creates a worktree for it; otherwise creates a new branch
   
 - `worktree <name>` - Switch to an existing worktree (with tab completion)
   - Example: `worktree feat/my-feature`
@@ -45,6 +47,8 @@ A comprehensive unified git worktree management system for working with multiple
 - **Dual Location Support**: Manages worktrees in both frontend root and studio
 - **Safety Checks**: Prevents accidental deletion and duplicate worktrees
 - **Branch Name Flexibility**: Supports slashes in branch names (converted to hyphens for directory names)
+- **Existing Branch Support**: Automatically detects and creates worktrees for existing branches
+- **Tmux Integration**: Automatically renames tmux windows to match the worktree name when switching or creating worktrees
 
 **Note**: The worktree system is configured for the Reducto frontend repo at `/Users/omar/reducto/frontend`
 

@@ -183,6 +183,7 @@ function _worktree_new() {
 		echo "  worktree new feature-x           # Creates from current branch"
 		echo "  worktree new feat/my-feature     # Branch name with slash, dir without"
 		echo "  worktree new feature-x main      # Creates from main"
+		echo "  worktree new existing-branch     # Creates worktree for existing branch"
 		return 1
 	fi
 	
@@ -192,11 +193,26 @@ function _worktree_new() {
 	# Convert slashes to hyphens for directory name
 	local dir_name="${branch_name//\//-}"
 	
-	echo "🌿 Creating worktree '$dir_name' with branch '$branch_name' from '$base_branch'..."
-	git worktree add .claude/worktrees/$dir_name -b $branch_name $base_branch && \
-		cd .claude/worktrees/$dir_name && \
-		echo "✅ Switched to new branch '$branch_name'" && \
+	# Check if branch already exists
+	if git rev-parse --verify "$branch_name" >/dev/null 2>&1; then
+		echo "🌿 Creating worktree '$dir_name' for existing branch '$branch_name'..."
+		git worktree add .claude/worktrees/$dir_name "$branch_name"
+	else
+		echo "🌿 Creating worktree '$dir_name' with new branch '$branch_name' from '$base_branch'..."
+		git worktree add .claude/worktrees/$dir_name -b "$branch_name" "$base_branch"
+	fi
+	
+	if [ $? -eq 0 ]; then
+		cd .claude/worktrees/$dir_name
+		echo "✅ Switched to branch '$branch_name'"
+		
+		# Rename tmux window if in tmux session
+		if [ -n "$TMUX" ]; then
+			tmux rename-window "$dir_name"
+		fi
+		
 		clc
+	fi
 }
 
 function _worktree_switch() {
@@ -231,10 +247,22 @@ function _worktree_switch() {
 	if $found_root; then
 		cd "$root_worktree"
 		echo "📂 Switched to worktree: $1 (root)"
+		
+		# Rename tmux window if in tmux session
+		if [ -n "$TMUX" ]; then
+			tmux rename-window "$dir_name"
+		fi
+		
 		return 0
 	elif $found_studio; then
 		cd "$studio_worktree"
 		echo "📂 Switched to worktree: $1 (studio)"
+		
+		# Rename tmux window if in tmux session
+		if [ -n "$TMUX" ]; then
+			tmux rename-window "$dir_name"
+		fi
+		
 		return 0
 	else
 		echo "❌ Worktree '$dir_name' not found"
@@ -253,9 +281,19 @@ function _worktree_main() {
 	if [[ "$current_dir" == *"/apps/studio"* ]]; then
 		cd "$FRONTEND_ROOT/apps/studio"
 		echo "📂 Switched to studio main"
+		
+		# Rename tmux window if in tmux session
+		if [ -n "$TMUX" ]; then
+			tmux rename-window "studio-main"
+		fi
 	else
 		cd "$FRONTEND_ROOT"
 		echo "📂 Switched to frontend root"
+		
+		# Rename tmux window if in tmux session
+		if [ -n "$TMUX" ]; then
+			tmux rename-window "main"
+		fi
 	fi
 }
 
