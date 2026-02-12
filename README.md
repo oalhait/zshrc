@@ -12,24 +12,39 @@ Personal zsh configuration file with custom functions, aliases, and development 
 
 ### Worktree Management System
 
-A comprehensive git worktree management system for working with multiple branches simultaneously.
+A comprehensive unified git worktree management system for working with multiple branches simultaneously. All worktree operations are now consolidated under a single `worktree` command with subcommands.
 
 #### Commands
 
-- `newbranch <name> [base]` - Create a new worktree from a base branch (defaults to current branch)
-  - Example: `newbranch feature-x` creates from current branch
-  - Example: `newbranch feature-x main` creates from main branch
+- `worktree new <name> [base]` - Create a new worktree from a base branch (defaults to current branch)
+  - Example: `worktree new feature-x` creates from current branch
+  - Example: `worktree new feat/my-feature main` creates from main branch
   - Supports branch names with slashes (e.g., `feat/my-feature`)
+  - Automatically launches Claude CLI after creation
   
 - `worktree <name>` - Switch to an existing worktree (with tab completion)
-  - Example: `worktree feature-x`
-  - Use `worktree main` to return to main working directory
+  - Example: `worktree feat/my-feature`
+  - Smart completion shows all available worktrees
   
-- `killbranch <name>` - Delete a worktree and its branch (with tab completion)
+- `worktree main` - Return to main working directory
+  - Smart detection: returns to studio main if currently in studio worktree
+  
+- `worktree delete <name>` - Delete a worktree and its branch (with tab completion)
   - Includes safety checks to prevent deleting the worktree you're currently in
   - Prompts for confirmation before deletion
+  - Cleans up both the worktree and the git branch
   
-- `listbranches` - List all available worktrees
+- `worktree list` - List all available worktrees
+  - Shows worktrees from both root and studio locations
+  - Displays actual branch names for clarity
+
+#### Features
+
+- **Unified Interface**: All worktree operations under one command
+- **Smart Completion**: Context-aware tab completion for all subcommands
+- **Dual Location Support**: Manages worktrees in both frontend root and studio
+- **Safety Checks**: Prevents accidental deletion and duplicate worktrees
+- **Branch Name Flexibility**: Supports slashes in branch names (converted to hyphens for directory names)
 
 **Note**: The worktree system is configured for the Reducto frontend repo at `/Users/omar/reducto/frontend`
 

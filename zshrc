@@ -116,21 +116,73 @@ function addbackground() {
 # WORKTREE MANAGEMENT SYSTEM
 # ============================================
 # Commands:
-#   newbranch <name> [base]  - Create new worktree from base branch (default: current)
-#   worktree <name>          - Switch to existing worktree (with tab completion)
-#   worktree main            - Return to main working directory
-#   killbranch <name>        - Delete worktree and branch (with tab completion)
-#   listbranches             - List all worktrees
+#   worktree new <name> [base]   - Create new worktree from base branch (default: current)
+#   worktree <name>              - Switch to existing worktree (with tab completion)
+#   worktree main                - Return to main working directory
+#   worktree delete <name>       - Delete worktree and branch (with tab completion)
+#   worktree list                - List all worktrees
 # ============================================
 
-function newbranch() {
+function worktree() {
+	local FRONTEND_ROOT="/Users/omar/reducto/frontend"
+	
+	# Check if we're in the frontend repo
+	local current_dir="$PWD"
+	if [[ ! "$current_dir" == "$FRONTEND_ROOT"* ]]; then
+		echo "❌ Error: Not in frontend repo"
+		return 1
+	fi
+	
+	# No arguments - show usage
 	if [ -z "$1" ]; then
-		echo "Usage: newbranch <branch-name> [base-branch]"
+		echo "Usage: worktree <command|name>"
+		echo ""
+		echo "Commands:"
+		echo "  worktree new <name> [base]  - Create new worktree"
+		echo "  worktree delete <name>      - Delete worktree and branch"
+		echo "  worktree list               - List all worktrees"
+		echo "  worktree main               - Return to main directory"
+		echo "  worktree <name>             - Switch to worktree"
 		echo ""
 		echo "Examples:"
-		echo "  newbranch feature-x           # Creates from current branch"
-		echo "  newbranch feat/my-feature     # Branch name with slash, dir without"
-		echo "  newbranch feature-x main      # Creates from main"
+		echo "  worktree new feat/my-feature        # Create from current branch"
+		echo "  worktree new feat/my-feature main   # Create from main"
+		echo "  worktree feat/my-feature            # Switch to worktree"
+		echo "  worktree delete feat/my-feature     # Delete worktree"
+		return 1
+	fi
+	
+	local cmd="$1"
+	
+	# Handle subcommands
+	case "$cmd" in
+		new)
+			_worktree_new "${@:2}"
+			;;
+		delete)
+			_worktree_delete "${@:2}"
+			;;
+		list)
+			_worktree_list
+			;;
+		main)
+			_worktree_main
+			;;
+		*)
+			# Default: switch to worktree
+			_worktree_switch "$1"
+			;;
+	esac
+}
+
+function _worktree_new() {
+	if [ -z "$1" ]; then
+		echo "Usage: worktree new <branch-name> [base-branch]"
+		echo ""
+		echo "Examples:"
+		echo "  worktree new feature-x           # Creates from current branch"
+		echo "  worktree new feat/my-feature     # Branch name with slash, dir without"
+		echo "  worktree new feature-x main      # Creates from main"
 		return 1
 	fi
 	
@@ -147,35 +199,9 @@ function newbranch() {
 		clc
 }
 
-function worktree() {
+function _worktree_switch() {
 	local FRONTEND_ROOT="/Users/omar/reducto/frontend"
-	
-	# Check if we're in the frontend repo
 	local current_dir="$PWD"
-	if [[ ! "$current_dir" == "$FRONTEND_ROOT"* ]]; then
-		echo "❌ Error: Not in frontend repo"
-		return 1
-	fi
-	
-	if [ -z "$1" ]; then
-		echo "Usage: worktree <name|main>"
-		echo ""
-		echo "Available worktrees:"
-		_list_worktrees
-		return 1
-	fi
-	
-	# Handle "main" - smart detection based on current location
-	if [ "$1" = "main" ]; then
-		if [[ "$current_dir" == *"/apps/studio"* ]]; then
-			cd "$FRONTEND_ROOT/apps/studio"
-			echo "📂 Switched to studio main"
-		else
-			cd "$FRONTEND_ROOT"
-			echo "📂 Switched to frontend root"
-		fi
-		return 0
-	fi
 	
 	# Convert slashes to hyphens for directory lookup
 	local dir_name="${1//\//-}"
@@ -214,26 +240,34 @@ function worktree() {
 		echo "❌ Worktree '$dir_name' not found"
 		echo ""
 		echo "Available worktrees:"
-		_list_worktrees
+		_worktree_list
 		return 1
 	fi
 }
 
-function killbranch() {
+function _worktree_main() {
 	local FRONTEND_ROOT="/Users/omar/reducto/frontend"
-	
-	# Check if we're in the frontend repo
 	local current_dir="$PWD"
-	if [[ ! "$current_dir" == "$FRONTEND_ROOT"* ]]; then
-		echo "❌ Error: Not in frontend repo"
-		return 1
+	
+	# Smart detection based on current location
+	if [[ "$current_dir" == *"/apps/studio"* ]]; then
+		cd "$FRONTEND_ROOT/apps/studio"
+		echo "📂 Switched to studio main"
+	else
+		cd "$FRONTEND_ROOT"
+		echo "📂 Switched to frontend root"
 	fi
+}
+
+function _worktree_delete() {
+	local FRONTEND_ROOT="/Users/omar/reducto/frontend"
+	local current_dir="$PWD"
 	
 	if [ -z "$1" ]; then
-		echo "Usage: killbranch <name>"
+		echo "Usage: worktree delete <name>"
 		echo ""
 		echo "Available worktrees:"
-		_list_worktrees
+		_worktree_list
 		return 1
 	fi
 	
@@ -271,7 +305,7 @@ function killbranch() {
 		echo "❌ Worktree '$dir_name' not found"
 		echo ""
 		echo "Available worktrees:"
-		_list_worktrees
+		_worktree_list
 		return 1
 	fi
 	
@@ -302,15 +336,12 @@ function killbranch() {
 	fi
 }
 
-function listbranches() {
-	echo "📋 Available worktrees:"
-	_list_worktrees
-}
-
-function _list_worktrees() {
+function _worktree_list() {
 	local FRONTEND_ROOT="/Users/omar/reducto/frontend"
 	local root_dir="$FRONTEND_ROOT/.claude/worktrees"
 	local studio_dir="$FRONTEND_ROOT/apps/studio/.claude/worktrees"
+	
+	echo "📋 Available worktrees:"
 	
 	local found_any=false
 	
@@ -324,7 +355,7 @@ function _list_worktrees() {
 				if [ "$branch_name" = "$dir_name" ]; then
 					echo "    - $dir_name"
 				else
-					echo "    - $dir_name (branch: $branch_name)"
+					echo "    - $branch_name"
 				fi
 				found_any=true
 			fi
@@ -341,7 +372,7 @@ function _list_worktrees() {
 				if [ "$branch_name" = "$dir_name" ]; then
 					echo "    - $dir_name"
 				else
-					echo "    - $dir_name (branch: $branch_name)"
+					echo "    - $branch_name"
 				fi
 				found_any=true
 			fi
@@ -356,70 +387,74 @@ function _list_worktrees() {
 # Autocomplete for worktree command
 function _worktree_completion() {
 	local FRONTEND_ROOT="/Users/omar/reducto/frontend"
-	local -a worktrees
-	worktrees=("main")
+	local line state
 	
-	# Add root worktrees (just directory names)
-	if [ -d "$FRONTEND_ROOT/.claude/worktrees" ]; then
-		for dir in "$FRONTEND_ROOT/.claude/worktrees"/*; do
-			if [ -d "$dir" ]; then
-				local dir_name="$(basename "$dir")"
-				# Try to get actual branch name for display
-				local branch_name="$(cd "$dir" && git branch --show-current 2>/dev/null || echo "$dir_name")"
-				worktrees+=("$branch_name")
+	_arguments -C \
+		'1: :->command' \
+		'*::arg:->args'
+	
+	case $state in
+		command)
+			local -a commands
+			commands=(
+				'new:Create new worktree'
+				'delete:Delete worktree and branch'
+				'list:List all worktrees'
+				'main:Return to main directory'
+			)
+			
+			# Add existing worktrees as options
+			if [ -d "$FRONTEND_ROOT/.claude/worktrees" ]; then
+				for dir in "$FRONTEND_ROOT/.claude/worktrees"/*; do
+					if [ -d "$dir" ]; then
+						local branch_name="$(cd "$dir" && git branch --show-current 2>/dev/null || basename "$dir")"
+						commands+=("$branch_name:Switch to worktree")
+					fi
+				done
 			fi
-		done
-	fi
-	
-	# Add studio worktrees (just directory names)
-	if [ -d "$FRONTEND_ROOT/apps/studio/.claude/worktrees" ]; then
-		for dir in "$FRONTEND_ROOT/apps/studio/.claude/worktrees"/*; do
-			if [ -d "$dir" ]; then
-				local dir_name="$(basename "$dir")"
-				# Try to get actual branch name for display
-				local branch_name="$(cd "$dir" && git branch --show-current 2>/dev/null || echo "$dir_name")"
-				worktrees+=("$branch_name")
+			
+			if [ -d "$FRONTEND_ROOT/apps/studio/.claude/worktrees" ]; then
+				for dir in "$FRONTEND_ROOT/apps/studio/.claude/worktrees"/*; do
+					if [ -d "$dir" ]; then
+						local branch_name="$(cd "$dir" && git branch --show-current 2>/dev/null || basename "$dir")"
+						commands+=("$branch_name:Switch to worktree")
+					fi
+				done
 			fi
-		done
-	fi
-	
-	_describe 'worktree' worktrees
-}
-
-# Autocomplete for killbranch command (same as worktree but without "main")
-function _killbranch_completion() {
-	local FRONTEND_ROOT="/Users/omar/reducto/frontend"
-	local -a worktrees
-	
-	# Add root worktrees (just directory names)
-	if [ -d "$FRONTEND_ROOT/.claude/worktrees" ]; then
-		for dir in "$FRONTEND_ROOT/.claude/worktrees"/*; do
-			if [ -d "$dir" ]; then
-				local dir_name="$(basename "$dir")"
-				# Try to get actual branch name for display
-				local branch_name="$(cd "$dir" && git branch --show-current 2>/dev/null || echo "$dir_name")"
-				worktrees+=("$branch_name")
-			fi
-		done
-	fi
-	
-	# Add studio worktrees (just directory names)
-	if [ -d "$FRONTEND_ROOT/apps/studio/.claude/worktrees" ]; then
-		for dir in "$FRONTEND_ROOT/apps/studio/.claude/worktrees"/*; do
-			if [ -d "$dir" ]; then
-				local dir_name="$(basename "$dir")"
-				# Try to get actual branch name for display
-				local branch_name="$(cd "$dir" && git branch --show-current 2>/dev/null || echo "$dir_name")"
-				worktrees+=("$branch_name")
-			fi
-		done
-	fi
-	
-	_describe 'worktree' worktrees
+			
+			_describe 'worktree' commands
+			;;
+		args)
+			case $line[1] in
+				delete)
+					# Autocomplete existing worktrees for delete
+					local -a worktrees
+					if [ -d "$FRONTEND_ROOT/.claude/worktrees" ]; then
+						for dir in "$FRONTEND_ROOT/.claude/worktrees"/*; do
+							if [ -d "$dir" ]; then
+								local branch_name="$(cd "$dir" && git branch --show-current 2>/dev/null || basename "$dir")"
+								worktrees+=("$branch_name")
+							fi
+						done
+					fi
+					
+					if [ -d "$FRONTEND_ROOT/apps/studio/.claude/worktrees" ]; then
+						for dir in "$FRONTEND_ROOT/apps/studio/.claude/worktrees"/*; do
+							if [ -d "$dir" ]; then
+								local branch_name="$(cd "$dir" && git branch --show-current 2>/dev/null || basename "$dir")"
+								worktrees+=("$branch_name")
+							fi
+						done
+					fi
+					
+					_describe 'worktree' worktrees
+					;;
+			esac
+			;;
+	esac
 }
 
 compdef _worktree_completion worktree
-compdef _killbranch_completion killbranch
 
 
 export PATH="/usr/local/opt/openssl@1.1/bin:$PATH"
