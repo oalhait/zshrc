@@ -195,6 +195,22 @@ function _worktree_new() {
 	
 	# Check if branch already exists
 	if git rev-parse --verify "$branch_name" >/dev/null 2>&1; then
+		# Branch exists - check if it's already checked out
+		local checkout_location=$(git worktree list | grep "\\[$branch_name\\]" | awk '{print $1}')
+		
+		if [ -n "$checkout_location" ]; then
+			echo "⚠️  Branch '$branch_name' is already checked out at:"
+			echo "   $checkout_location"
+			echo ""
+			read -q "REPLY?Create worktree anyway and detach from main? (y/n) "
+			echo ""
+			
+			if [[ ! $REPLY =~ ^[Yy]$ ]]; then
+				echo "❌ Cancelled"
+				return 1
+			fi
+		fi
+		
 		echo "🌿 Creating worktree '$dir_name' for existing branch '$branch_name'..."
 		git worktree add .claude/worktrees/$dir_name "$branch_name"
 	else
@@ -212,6 +228,9 @@ function _worktree_new() {
 		fi
 		
 		clc
+	else
+		echo "❌ Failed to create worktree"
+		return 1
 	fi
 }
 

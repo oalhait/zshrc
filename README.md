@@ -23,6 +23,7 @@ A comprehensive unified git worktree management system for working with multiple
   - Supports branch names with slashes (e.g., `feat/my-feature`)
   - Automatically launches Claude CLI after creation
   - **Smart branch detection**: If the branch already exists, creates a worktree for it; otherwise creates a new branch
+  - **Safety check**: Warns if a branch is already checked out in another worktree and prompts for confirmation
   
 - `worktree <name>` - Switch to an existing worktree (with tab completion)
   - Example: `worktree feat/my-feature`
